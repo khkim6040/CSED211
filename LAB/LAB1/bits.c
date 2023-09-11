@@ -25,7 +25,6 @@ LAB L1 INSTRUCTIONS:
 
 int bitNor(int x, int y) {
   //to be implemented
-  //sdfsdf
   return 0;
 }
 
