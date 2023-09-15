@@ -85,7 +85,8 @@ int absVal(int x) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  //to be implemented
-  return 0;
+  int arithmetic_shift = (x >> n);
+  int logical_shift_helper = ~(1 << 31 >> n << 1);
+  return (arithmetic_shift & logical_shift_helper);
 }
 
