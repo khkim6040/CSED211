@@ -68,7 +68,9 @@ int addOK(int x, int y) {
  *   Rating: 4
  */
 int absVal(int x) {
-  //to be implemented
+  int sign = (x >> 31);
+  int least_significant_bit = sign & 1;
+  return (sign ^ x) + least_significant_bit;
   return 0;
 }
 
