@@ -24,8 +24,7 @@ LAB L1 INSTRUCTIONS:
  */
 
 int bitNor(int x, int y) {
-  //to be implemented
-  return 0;
+  return ~x & ~y;
 }
 
 
