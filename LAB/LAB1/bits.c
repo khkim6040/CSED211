@@ -51,8 +51,10 @@ int isZero(int x) {
  *   Rating: 3
  */
 int addOK(int x, int y) {
-  //to be implemented
-  return 0;
+  int sign_x = x >> 31;
+  int sign_y = y >> 31;
+  int sign_sum = (x + y) >> 31;
+  return !(((sign_x ^ sign_sum) & (sign_y ^ sign_sum)) & 1);
 }
 
 
