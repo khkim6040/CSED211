@@ -54,6 +54,9 @@ int addOK(int x, int y) {
   int sign_x = x >> 31;
   int sign_y = y >> 31;
   int sign_sum = (x + y) >> 31;
+  // (sign_x & sign_sum) | (sign_y & sign_sum) & 1은 사용하지 못 함.
+  // 0, 0, 0일 때 1이 나와야 하는데 0이 나옴. &를 사용하면 서로 같은 부호일 때 1이 나오지 않음. 
+  // 그렇게 하려면 &대신 XNOR를 사용해야 함.
   return !(((sign_x ^ sign_sum) & (sign_y ^ sign_sum)) & 1);
 }
 
@@ -68,10 +71,9 @@ int addOK(int x, int y) {
  *   Rating: 4
  */
 int absVal(int x) {
-  int sign = (x >> 31);
+  int sign = x >> 31;
   int least_significant_bit = sign & 1;
   return (sign ^ x) + least_significant_bit;
-  return 0;
 }
 
 
@@ -85,8 +87,8 @@ int absVal(int x) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  int arithmetic_shift = (x >> n);
+  int arithmetic_shift = x >> n;
   int logical_shift_helper = ~(1 << 31 >> n << 1);
-  return (arithmetic_shift & logical_shift_helper);
+  return arithmetic_shift & logical_shift_helper;
 }
 
