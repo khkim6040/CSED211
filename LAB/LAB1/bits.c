@@ -37,8 +37,7 @@ int bitNor(int x, int y) {
  *   Rating: 1
  */
 int isZero(int x) {
-  //to be implemented
-  return 0;
+  return !x;
 }
 
 
