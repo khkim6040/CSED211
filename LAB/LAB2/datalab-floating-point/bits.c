@@ -2,7 +2,7 @@
  * CS:APP Data Lab 
  * 
  * <Please put your name and userid here>
- * 
+ *  
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -174,8 +174,9 @@ NOTES:
  *   Max ops: 5
  *   Rating: 2
  */
-int negate(int x) {
-  return 2;
+int negate(int x) { 
+   // Definition of -x is ~x+1 when x is integer
+   return ~x+1;
 }
 /* 
  * isLess - if x < y  then return 1, else return 0 
@@ -185,7 +186,17 @@ int negate(int x) {
  *   Rating: 3
  */
 int isLess(int x, int y) {
-  return 2;
+   int sign_x = (x>>31) & 1;
+   int sign_y = (y>>31) & 1;
+   int sign_x_minus_y = ((x+(~y+1)) >> 31) & 1;
+
+   // Check the cases where x < y:
+   // Case 1: x is negative (sign_x == 1), y is positive (sign_y == 0)
+   // Case 2: Both x and y are negative or positive, but x - y is negative (sign_x_minus_y == 1)
+   // !(sign_x ^ sign_y) is equal to (sign_x == 1 && sign_y == 1) || (sign_x == 0 && sign_y == 0)
+   int is_sign_same = !(sign_x ^ sign_y);
+   return (sign_x & !sign_y) | (is_sign_same & sign_x_minus_y);
+
 }
 /* 
  * float_abs - Return bit-level equivalent of absolute value of f for
