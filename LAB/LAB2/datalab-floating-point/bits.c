@@ -210,7 +210,15 @@ int isLess(int x, int y) {
  *   Rating: 2
  */
 unsigned float_abs(unsigned uf) {
-  return 2;
+   // Reverse MSB
+   unsigned sign_mask = 0x80000000;
+   unsigned exponential_mask = 0x7F800000;
+   unsigned fractional_mask = 0x007FFFFF;
+   // Check if expoenential part is [1111 1111] and fractional part is NOT ZERO
+   if((uf&exponential_mask) == exponential_mask && (uf&fractional_mask)) {
+      return uf;
+   }
+   return uf & ~sign_mask;
 }
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
