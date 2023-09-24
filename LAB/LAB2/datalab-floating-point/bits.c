@@ -254,7 +254,7 @@ unsigned float_twice(unsigned uf)
       return (sign_part | (fraction_part << 1));
    }
    // Normalized number
-   exponent_part += 0x00800000; // Adding 1 to exponent part is equal to double the value  
+   exponent_part += 0x00800000; // Adding 1 to exponent part is equal to double the value
    return (sign_part | exponent_part | fraction_part);
 }
 /*
@@ -273,9 +273,9 @@ unsigned float_i2f(int x)
    unsigned ux, exponent_part, fraction_part, round_bits;
    // When x is 0
    if (x == 0)
-      return 0; 
+      return 0;
    // When x is TMIN, return -TMIN which is 2^31
-   if (x == 0x80000000) 
+   if (x == 0x80000000)
       return 0xCF000000;
    // When x is negative, convert x to its absolute value for convenience
    if (sign_part)
@@ -283,8 +283,9 @@ unsigned float_i2f(int x)
    // Derive exponent part, 8bits
    ux = x;
    exponent_part = 158; // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
-   // Find exponent_part by shifting left until find bit 1 
-   while(ux < 0x80000000) {
+   // Find exponent_part by shifting left until find bit 1
+   while (ux < 0x80000000)
+   {
       exponent_part--;
       ux <<= 1;
    }
@@ -293,10 +294,12 @@ unsigned float_i2f(int x)
    // Keep last 8bits(1byte) for rounding case
    round_bits = ux & 0xFF;
    // Round to even
-   if(round_bits > 0x80 || (round_bits==0x80 && fraction_part & 1) ) {
+   if (round_bits > 0x80 || (round_bits == 0x80 && fraction_part & 1))
+   {
       fraction_part++;
-      // Overflow occured 
-      if(fraction_part == 0x800000) {
+      // Overflow occured
+      if (fraction_part == 0x800000)
+      {
          fraction_part = 0;
          exponent_part++;
       }
@@ -333,31 +336,36 @@ int float_f2i(unsigned uf)
       return NaN_OR_INF;
    }
    // Check zero
-   if(exponent_part == 0) {
+   if (exponent_part == 0)
+   {
       return 0;
    }
    // Now, consider IEEE Floating Point Standard M*2^E
    exponent_part >>= 23;
    // When exponent part - BIAS < 0, int value is always zero
-   if(exponent_part < BIAS) {
+   if (exponent_part < BIAS)
+   {
       return 0;
    }
    exponent_part -= BIAS;
    // When exponent part is more than 30, out of int range
-   if(exponent_part > 30) {
+   if (exponent_part > 30)
+   {
       return NaN_OR_INF;
    }
    // Normalize the fraction by adding the hidden bit
    fraction_part = fraction_part | 0x00800000u;
    // Adjust fraction_part to integer
    // Compare with length of fraction part to determine which way to shift
-   if(exponent_part < 23) {
+   if (exponent_part < 23)
+   {
       // When exponent is less than 23, make M*2^E by shifting fraction part right
-      fraction_part >>= 23-exponent_part;
+      fraction_part >>= 23 - exponent_part;
    }
-   else {
+   else
+   {
       // When exponent is more than 23, make M*2^E by shifting fraction part left
-      fraction_part <<= exponent_part-23;
+      fraction_part <<= exponent_part - 23;
    }
    // Finally IEEE Floating Point Standard (-1)^s * M * 2^E made by considering sign part
    result = sign_part ? -fraction_part : fraction_part;
