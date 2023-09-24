@@ -246,12 +246,6 @@ unsigned float_twice(unsigned uf)
    // Check for NaN or infinity
    if (exponent_part == exponent_mask)
    {
-      // NaN: if fraction != 0, return uf
-      if (fraction_part != 0)
-      {
-         return uf;
-      }
-      // Infinity: return uf
       return uf;
    }
 
@@ -262,7 +256,7 @@ unsigned float_twice(unsigned uf)
    }
 
    // Normalized number
-   exponent_part += 0x00800000; // Increment the exponent to double the value by adding LSB of exponent part
+   exponent_part += 0x00800000; // Adding 1 to exponent part is equal to double the value  
    return (sign_part | exponent_part | fraction_part);
 }
 /*
@@ -276,7 +270,42 @@ unsigned float_twice(unsigned uf)
  */
 unsigned float_i2f(int x)
 {
-   return 2;
+   unsigned sign_mask = 0x80000000;
+   unsigned sign_part = x & sign_mask;
+   unsigned ux, exponent_part, fraction_part, round_bits;
+   // When x is 0
+   if (x == 0)
+      return 0; 
+   // When x is TMIN, return -TMIN which is 2^31
+   if (x == 0x80000000) 
+      return 0xCF000000;
+   // When x is negative, convert x to its absolute value for convenience
+   if (sign_part)
+      x = -x;
+   // Derive exponent part, 8bits
+   ux = x;
+   exponent_part = 158; // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
+   // Find exponent_part by shifting left until find bit 1 
+   while(ux < 0x80000000) {
+      exponent_part--;
+      ux <<= 1;
+   }
+   // Derive fraction part, 23bits except MSB of 24bits
+   fraction_part = (ux & 0x7FFFFF00) >> 8; // Note that use ux which has been already shifted to 1.xxx form
+   // Keep last 8bits(1byte) for rounding case
+   round_bits = ux & 0xFF;
+   // Round to even
+   if(round_bits > 0x80 || (round_bits==0x80 && fraction_part & 1) ) {
+      fraction_part++;
+      // Overflow occured 
+      if(fraction_part == 0x800000) {
+         fraction_part = 0;
+         exponent_part++;
+      }
+   }
+   // Return bit-level equivalent of expression (float) x
+   return sign_part | (exponent_part << 23) | fraction_part;
+
 }
 /*
  * float_f2i - Return bit-level equivalent of expression (int) f
