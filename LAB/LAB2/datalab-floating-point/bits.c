@@ -210,14 +210,16 @@ int isLess(int x, int y) {
  *   Rating: 2
  */
 unsigned float_abs(unsigned uf) {
-   // Reverse MSB
    unsigned sign_mask = 0x80000000;
-   unsigned exponential_mask = 0x7F800000;
-   unsigned fractional_mask = 0x007FFFFF;
-   // Check if expoenential part is [1111 1111] and fractional part is NOT ZERO
-   if((uf&exponential_mask) == exponential_mask && (uf&fractional_mask)) {
+   unsigned exponent_mask = 0x7F800000;
+   unsigned fraction_mask = 0x007FFFFF;
+   unsigned exponent_part = uf & exponent_mask;
+   unsigned fraction_part = uf & fraction_mask;
+   // Check if expoenent part is [1111 1111] and fraction part is NOT ZERO
+   if(exponent_part == exponent_mask && fraction_part) {
       return uf;
    }
+   // Reverse MSB
    return uf & ~sign_mask;
 }
 /* 
@@ -232,7 +234,30 @@ unsigned float_abs(unsigned uf) {
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-  return 2;
+    unsigned sign_mask = 0x80000000;
+    unsigned exponent_mask = 0x7F800000;
+    unsigned fraction_mask = 0x007FFFFF;
+    unsigned sign_part = uf&sign_mask;
+    unsigned exponent_part = uf&exponent_mask;
+    unsigned fraction_part = uf&fraction_mask;
+    // Check for NaN or infinity
+    if (exponent_part == exponent_mask) {
+        // NaN: if fraction != 0, return uf
+        if (fraction_part != 0) {
+            return uf;
+        }
+        // Infinity: return uf
+        return uf;
+    }
+
+    // Denormalized number or zero
+    if (exponent_part == 0) {
+        return (sign_part | (fraction_part << 1));
+    }
+
+    // Normalized number
+    exponent_part += 0x00800000; // Increment the exponent to double the value by adding LSB of exponent part
+    return (sign_part | exponent_part | fraction_part);
 }
 /* 
  * float_i2f - Return bit-level equivalent of expression (float) x
