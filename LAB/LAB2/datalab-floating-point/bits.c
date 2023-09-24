@@ -173,10 +173,9 @@ NOTES:
  *   Max ops: 5
  *   Rating: 2
  */
-int negate(int x)
-{
-   // Definition of -x is ~x+1 when x is integer
-   return ~x + 1;
+int negate(int x) {
+  // Definition of -x is ~x+1 when x is integer
+  return ~x + 1;
 }
 /*
  * isLess - if x < y  then return 1, else return 0
@@ -185,17 +184,18 @@ int negate(int x)
  *   Max ops: 24
  *   Rating: 3
  */
-int isLess(int x, int y)
-{
-   int sign_x = (x >> 31) & 1;
-   int sign_y = (y >> 31) & 1;
-   int sign_x_minus_y = ((x + (~y + 1)) >> 31) & 1;
-   // Check the cases where x < y:
-   // Case 1: x is negative (sign_x == 1), y is positive (sign_y == 0)
-   // Case 2: Both x and y are negative or positive, but x - y is negative (sign_x_minus_y == 1)
-   // !(sign_x ^ sign_y) is equal to (sign_x == 1 && sign_y == 1) || (sign_x == 0 && sign_y == 0)
-   int is_sign_same = !(sign_x ^ sign_y);
-   return (sign_x & !sign_y) | (is_sign_same & sign_x_minus_y);
+int isLess(int x, int y) {
+  int sign_x = (x >> 31) & 1;
+  int sign_y = (y >> 31) & 1;
+  int sign_x_minus_y = ((x + (~y + 1)) >> 31) & 1;
+  // Check the cases where x < y:
+  // Case 1: x is negative (sign_x == 1), y is positive (sign_y == 0)
+  // Case 2: Both x and y are negative or positive, but x - y is negative
+  // (sign_x_minus_y == 1)
+  // !(sign_x ^ sign_y) is equal to (sign_x == 1 && sign_y == 1) || (sign_x == 0
+  // && sign_y == 0)
+  int is_sign_same = !(sign_x ^ sign_y);
+  return (sign_x & !sign_y) | (is_sign_same & sign_x_minus_y);
 }
 /*
  * float_abs - Return bit-level equivalent of absolute value of f for
@@ -208,20 +208,18 @@ int isLess(int x, int y)
  *   Max ops: 10
  *   Rating: 2
  */
-unsigned float_abs(unsigned uf)
-{
-   unsigned SIGN_MASK = 0x80000000;
-   unsigned EXPONENT_MASK = 0x7F800000;
-   unsigned FRACTION_MASK = 0x007FFFFF;
-   unsigned exponent_part = uf & EXPONENT_MASK;
-   unsigned fraction_part = uf & FRACTION_MASK;
-   // Check if expoenent part is [1111 1111] and fraction part is NOT ZERO
-   if (exponent_part == EXPONENT_MASK && fraction_part)
-   {
-      return uf;
-   }
-   // Reverse MSB
-   return uf & ~SIGN_MASK;
+unsigned float_abs(unsigned uf) {
+  unsigned SIGN_MASK = 0x80000000;
+  unsigned EXPONENT_MASK = 0x7F800000;
+  unsigned FRACTION_MASK = 0x007FFFFF;
+  unsigned exponent_part = uf & EXPONENT_MASK;
+  unsigned fraction_part = uf & FRACTION_MASK;
+  // Check if expoenent part is [1111 1111] and fraction part is NOT ZERO
+  if (exponent_part == EXPONENT_MASK && fraction_part) {
+    return uf;
+  }
+  // Reverse MSB
+  return uf & ~SIGN_MASK;
 }
 /*
  * float_twice - Return bit-level equivalent of expression 2*f for
@@ -234,29 +232,26 @@ unsigned float_abs(unsigned uf)
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_twice(unsigned uf)
-{
-   unsigned SIGN_MASK = 0x80000000;
-   unsigned EXPONENT_MASK = 0x7F800000;
-   unsigned FRACTION_MASK = 0x007FFFFF;
-   unsigned sign_part = uf & SIGN_MASK;
-   unsigned exponent_part = uf & EXPONENT_MASK;
-   unsigned fraction_part = uf & FRACTION_MASK;
-   // Check for NaN or infinity
-   if (exponent_part == EXPONENT_MASK)
-   {
-      return uf;
-   }
-   // Denormalized number or zero
-   if (exponent_part == 0)
-   {
-      return (sign_part | exponent_part | (fraction_part << 1));
-   }
-   // Normalized number
-   // Adding 1 to exponent part is equal to double the value
-   // Because it follows IEEE Floating Point Standard
-   exponent_part += 0x00800000; 
-   return (sign_part | exponent_part | fraction_part);
+unsigned float_twice(unsigned uf) {
+  unsigned SIGN_MASK = 0x80000000;
+  unsigned EXPONENT_MASK = 0x7F800000;
+  unsigned FRACTION_MASK = 0x007FFFFF;
+  unsigned sign_part = uf & SIGN_MASK;
+  unsigned exponent_part = uf & EXPONENT_MASK;
+  unsigned fraction_part = uf & FRACTION_MASK;
+  // Check for NaN or infinity
+  if (exponent_part == EXPONENT_MASK) {
+    return uf;
+  }
+  // Denormalized number or zero
+  if (exponent_part == 0) {
+    return (sign_part | exponent_part | (fraction_part << 1));
+  }
+  // Normalized number
+  // Adding 1 to exponent part is equal to double the value
+  // Because it follows IEEE Floating Point Standard
+  exponent_part += 0x00800000;
+  return (sign_part | exponent_part | fraction_part);
 }
 /*
  * float_i2f - Return bit-level equivalent of expression (float) x
@@ -267,47 +262,42 @@ unsigned float_twice(unsigned uf)
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_i2f(int x)
-{
-   unsigned SIGN_MASK = 0x80000000;
-   unsigned sign_part = x & SIGN_MASK;
-   unsigned ux, exponent_part, fraction_part, round_bits;
-   // When x is 0
-   if (x == 0)
-      return 0;
-   // When x is TMIN, return -TMIN which is 2^31
-   if (x == 0x80000000)
-      return 0xCF000000;
-   // When x is negative, convert x to its absolute value for convenience
-   if (sign_part)
-      x = -x;
-   // Derive 8bits exponent part
-   ux = x;
-   // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
-   exponent_part = 158; 
-   // Find exponent_part by shifting left until MSB becoming 1
-   while (ux < 0x80000000)
-   {
-      exponent_part--;
-      ux <<= 1;
-   }
-   // Derive fraction part, 23bits except MSB of 24bits
-   fraction_part = (ux & 0x7FFFFF00) >> 8; // Note that use ux which has been already shifted to 1.xxx form
-   // Keep last 8bits(1byte) for rounding case
-   round_bits = ux & 0xFF;
-   // Round to even
-   if (round_bits > 0x80 || (round_bits == 0x80 && fraction_part & 1))
-   {
-      fraction_part++;
-      // Overflow occured
-      if (fraction_part == 0x800000)
-      {
-         fraction_part = 0;
-         exponent_part++;
-      }
-   }
-   // Return bit-level equivalent of expression (float) x
-   return sign_part | (exponent_part << 23) | fraction_part;
+unsigned float_i2f(int x) {
+  unsigned SIGN_MASK = 0x80000000;
+  unsigned sign_part = x & SIGN_MASK;
+  unsigned ux, exponent_part, fraction_part, round_bits;
+  // When x is 0
+  if (x == 0) return 0;
+  // When x is TMIN, return -TMIN which is 2^31
+  if (x == 0x80000000) return 0xCF000000;
+  // When x is negative, convert x to its absolute value for convenience
+  if (sign_part) x = -x;
+  // Derive 8bits exponent part
+  ux = x;
+  // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
+  exponent_part = 158;
+  // Find exponent_part by shifting left until MSB becoming 1
+  while (ux < 0x80000000) {
+    exponent_part--;
+    ux <<= 1;
+  }
+  // Derive fraction part, 23bits except MSB of 24bits
+  fraction_part =
+      (ux & 0x7FFFFF00) >>
+      8;  // Note that use ux which has been already shifted to 1.xxx form
+  // Keep last 8bits(1byte) for rounding case
+  round_bits = ux & 0xFF;
+  // Round to even
+  if (round_bits > 0x80 || (round_bits == 0x80 && fraction_part & 1)) {
+    fraction_part++;
+    // Overflow occured
+    if (fraction_part == 0x800000) {
+      fraction_part = 0;
+      exponent_part++;
+    }
+  }
+  // Return bit-level equivalent of expression (float) x
+  return sign_part | (exponent_part << 23) | fraction_part;
 }
 /*
  * float_f2i - Return bit-level equivalent of expression (int) f
@@ -321,55 +311,48 @@ unsigned float_i2f(int x)
  *   Max ops: 30
  *   Rating: 4
  */
-int float_f2i(unsigned uf)
-{
-   unsigned SIGN_MASK = 0x80000000;
-   unsigned EXPONENT_MASK = 0x7F800000;
-   unsigned FRACTION_MASK = 0x007FFFFF;
-   unsigned sign_part = uf & SIGN_MASK;
-   unsigned exponent_part = uf & EXPONENT_MASK;
-   unsigned fraction_part = uf & FRACTION_MASK;
-   unsigned NaN_OR_INF = 0x80000000u;
-   unsigned BIAS = 127; // 2^7 - 1
-   int result;
-   // Check for NaN or infinity
-   if (exponent_part == EXPONENT_MASK)
-   {
-      return NaN_OR_INF;
-   }
-   // Check zero
-   if (exponent_part == 0)
-   {
-      return 0;
-   }
-   // Now, consider IEEE Floating Point Standard M*2^E
-   exponent_part >>= 23;
-   // When exponent part - BIAS < 0, int value is always zero
-   if (exponent_part < BIAS)
-   {
-      return 0;
-   }
-   exponent_part -= BIAS;
-   // When exponent part is more than 30, out of int range
-   if (exponent_part > 30)
-   {
-      return NaN_OR_INF;
-   }
-   // Normalize the fraction by adding the hidden bit
-   fraction_part = fraction_part | 0x00800000u;
-   // Adjust fraction_part to integer
-   // Compare with length of fraction part to determine which way to shift
-   if (exponent_part < 23)
-   {
-      // When exponent is less than 23, make M*2^E by shifting fraction part right
-      fraction_part >>= 23 - exponent_part;
-   }
-   else
-   {
-      // When exponent is more than 23, make M*2^E by shifting fraction part left
-      fraction_part <<= exponent_part - 23;
-   }
-   // Finally IEEE Floating Point Standard (-1)^s * M * 2^E made by considering sign part
-   result = sign_part ? -fraction_part : fraction_part;
-   return result;
+int float_f2i(unsigned uf) {
+  unsigned SIGN_MASK = 0x80000000;
+  unsigned EXPONENT_MASK = 0x7F800000;
+  unsigned FRACTION_MASK = 0x007FFFFF;
+  unsigned sign_part = uf & SIGN_MASK;
+  unsigned exponent_part = uf & EXPONENT_MASK;
+  unsigned fraction_part = uf & FRACTION_MASK;
+  unsigned NaN_OR_INF = 0x80000000u;
+  unsigned BIAS = 127;  // 2^7 - 1
+  int result;
+  // Check for NaN or infinity
+  if (exponent_part == EXPONENT_MASK) {
+    return NaN_OR_INF;
+  }
+  // Check zero
+  if (exponent_part == 0) {
+    return 0;
+  }
+  // Now, consider IEEE Floating Point Standard M*2^E
+  exponent_part >>= 23;
+  // When exponent part - BIAS < 0, int value is always zero
+  if (exponent_part < BIAS) {
+    return 0;
+  }
+  exponent_part -= BIAS;
+  // When exponent part is more than 30, out of int range
+  if (exponent_part > 30) {
+    return NaN_OR_INF;
+  }
+  // Normalize the fraction by adding the hidden bit
+  fraction_part = fraction_part | 0x00800000u;
+  // Adjust fraction_part to integer
+  // Compare with length of fraction part to determine which way to shift
+  if (exponent_part < 23) {
+    // When exponent is less than 23, make M*2^E by shifting fraction part right
+    fraction_part >>= 23 - exponent_part;
+  } else {
+    // When exponent is more than 23, make M*2^E by shifting fraction part left
+    fraction_part <<= exponent_part - 23;
+  }
+  // Finally IEEE Floating Point Standard (-1)^s * M * 2^E made by considering
+  // sign part
+  result = sign_part ? -fraction_part : fraction_part;
+  return result;
 }
