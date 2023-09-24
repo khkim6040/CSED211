@@ -1,8 +1,8 @@
-/* 
- * CS:APP Data Lab 
- * 
+/*
+ * CS:APP Data Lab
+ *
  * <Please put your name and userid here>
- *  
+ *
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -10,7 +10,7 @@
  * compiler. You can still use printf for debugging without including
  * <stdio.h>, although you might get a compiler warning. In general,
  * it's not good practice to ignore compiler warnings, but in this
- * case it's OK.  
+ * case it's OK.
  */
 
 #if 0
@@ -129,7 +129,6 @@ NOTES:
  *      the correct answers.
  */
 
-
 #endif
 /* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
@@ -167,28 +166,30 @@ NOTES:
    - 285 hentaigana
    - 3 additional Zanabazar Square characters */
 /* We do not support C11 <threads.h>.  */
-/* 
- * negate - return -x 
+/*
+ * negate - return -x
  *   Example: negate(1) = -1.
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 5
  *   Rating: 2
  */
-int negate(int x) { 
+int negate(int x)
+{
    // Definition of -x is ~x+1 when x is integer
-   return ~x+1;
+   return ~x + 1;
 }
-/* 
- * isLess - if x < y  then return 1, else return 0 
+/*
+ * isLess - if x < y  then return 1, else return 0
  *   Example: isLess(4,5) = 1.
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 24
  *   Rating: 3
  */
-int isLess(int x, int y) {
-   int sign_x = (x>>31) & 1;
-   int sign_y = (y>>31) & 1;
-   int sign_x_minus_y = ((x+(~y+1)) >> 31) & 1;
+int isLess(int x, int y)
+{
+   int sign_x = (x >> 31) & 1;
+   int sign_y = (y >> 31) & 1;
+   int sign_x_minus_y = ((x + (~y + 1)) >> 31) & 1;
 
    // Check the cases where x < y:
    // Case 1: x is negative (sign_x == 1), y is positive (sign_y == 0)
@@ -196,9 +197,8 @@ int isLess(int x, int y) {
    // !(sign_x ^ sign_y) is equal to (sign_x == 1 && sign_y == 1) || (sign_x == 0 && sign_y == 0)
    int is_sign_same = !(sign_x ^ sign_y);
    return (sign_x & !sign_y) | (is_sign_same & sign_x_minus_y);
-
 }
-/* 
+/*
  * float_abs - Return bit-level equivalent of absolute value of f for
  *   floating point argument f.
  *   Both the argument and result are passed as unsigned int's, but
@@ -209,20 +209,22 @@ int isLess(int x, int y) {
  *   Max ops: 10
  *   Rating: 2
  */
-unsigned float_abs(unsigned uf) {
+unsigned float_abs(unsigned uf)
+{
    unsigned sign_mask = 0x80000000;
    unsigned exponent_mask = 0x7F800000;
    unsigned fraction_mask = 0x007FFFFF;
    unsigned exponent_part = uf & exponent_mask;
    unsigned fraction_part = uf & fraction_mask;
    // Check if expoenent part is [1111 1111] and fraction part is NOT ZERO
-   if(exponent_part == exponent_mask && fraction_part) {
+   if (exponent_part == exponent_mask && fraction_part)
+   {
       return uf;
    }
    // Reverse MSB
    return uf & ~sign_mask;
 }
-/* 
+/*
  * float_twice - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
  *   Both the argument and result are passed as unsigned int's, but
@@ -233,33 +235,37 @@ unsigned float_abs(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_twice(unsigned uf) {
-    unsigned sign_mask = 0x80000000;
-    unsigned exponent_mask = 0x7F800000;
-    unsigned fraction_mask = 0x007FFFFF;
-    unsigned sign_part = uf&sign_mask;
-    unsigned exponent_part = uf&exponent_mask;
-    unsigned fraction_part = uf&fraction_mask;
-    // Check for NaN or infinity
-    if (exponent_part == exponent_mask) {
-        // NaN: if fraction != 0, return uf
-        if (fraction_part != 0) {
-            return uf;
-        }
-        // Infinity: return uf
-        return uf;
-    }
+unsigned float_twice(unsigned uf)
+{
+   unsigned sign_mask = 0x80000000;
+   unsigned exponent_mask = 0x7F800000;
+   unsigned fraction_mask = 0x007FFFFF;
+   unsigned sign_part = uf & sign_mask;
+   unsigned exponent_part = uf & exponent_mask;
+   unsigned fraction_part = uf & fraction_mask;
+   // Check for NaN or infinity
+   if (exponent_part == exponent_mask)
+   {
+      // NaN: if fraction != 0, return uf
+      if (fraction_part != 0)
+      {
+         return uf;
+      }
+      // Infinity: return uf
+      return uf;
+   }
 
-    // Denormalized number or zero
-    if (exponent_part == 0) {
-        return (sign_part | (fraction_part << 1));
-    }
+   // Denormalized number or zero
+   if (exponent_part == 0)
+   {
+      return (sign_part | (fraction_part << 1));
+   }
 
-    // Normalized number
-    exponent_part += 0x00800000; // Increment the exponent to double the value by adding LSB of exponent part
-    return (sign_part | exponent_part | fraction_part);
+   // Normalized number
+   exponent_part += 0x00800000; // Increment the exponent to double the value by adding LSB of exponent part
+   return (sign_part | exponent_part | fraction_part);
 }
-/* 
+/*
  * float_i2f - Return bit-level equivalent of expression (float) x
  *   Result is returned as unsigned int, but
  *   it is to be interpreted as the bit-level representation of a
@@ -268,10 +274,11 @@ unsigned float_twice(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned float_i2f(int x) {
-  return 2;
+unsigned float_i2f(int x)
+{
+   return 2;
 }
-/* 
+/*
  * float_f2i - Return bit-level equivalent of expression (int) f
  *   for floating point argument f.
  *   Argument is passed as unsigned int, but
@@ -283,6 +290,7 @@ unsigned float_i2f(int x) {
  *   Max ops: 30
  *   Rating: 4
  */
-int float_f2i(unsigned uf) {
-  return 2;
+int float_f2i(unsigned uf)
+{
+   return 2;
 }
