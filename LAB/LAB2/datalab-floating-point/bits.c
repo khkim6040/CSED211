@@ -190,7 +190,6 @@ int isLess(int x, int y)
    int sign_x = (x >> 31) & 1;
    int sign_y = (y >> 31) & 1;
    int sign_x_minus_y = ((x + (~y + 1)) >> 31) & 1;
-
    // Check the cases where x < y:
    // Case 1: x is negative (sign_x == 1), y is positive (sign_y == 0)
    // Case 2: Both x and y are negative or positive, but x - y is negative (sign_x_minus_y == 1)
@@ -251,10 +250,12 @@ unsigned float_twice(unsigned uf)
    // Denormalized number or zero
    if (exponent_part == 0)
    {
-      return (sign_part | (fraction_part << 1));
+      return (sign_part | exponent_part | (fraction_part << 1));
    }
    // Normalized number
-   exponent_part += 0x00800000; // Adding 1 to exponent part is equal to double the value
+   // Adding 1 to exponent part is equal to double the value
+   // Because it follows IEEE Floating Point Standard
+   exponent_part += 0x00800000; 
    return (sign_part | exponent_part | fraction_part);
 }
 /*
@@ -280,10 +281,11 @@ unsigned float_i2f(int x)
    // When x is negative, convert x to its absolute value for convenience
    if (sign_part)
       x = -x;
-   // Derive exponent part, 8bits
+   // Derive 8bits exponent part
    ux = x;
-   exponent_part = 158; // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
-   // Find exponent_part by shifting left until find bit 1
+   // At first, set exponent_part = bias + # of bits - 1 = 2^7 - 1 + 32 - 1
+   exponent_part = 158; 
+   // Find exponent_part by shifting left until MSB becoming 1
    while (ux < 0x80000000)
    {
       exponent_part--;
