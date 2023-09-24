@@ -211,18 +211,18 @@ int isLess(int x, int y)
  */
 unsigned float_abs(unsigned uf)
 {
-   unsigned sign_mask = 0x80000000;
-   unsigned exponent_mask = 0x7F800000;
-   unsigned fraction_mask = 0x007FFFFF;
-   unsigned exponent_part = uf & exponent_mask;
-   unsigned fraction_part = uf & fraction_mask;
+   unsigned SIGN_MASK = 0x80000000;
+   unsigned EXPONENT_MASK = 0x7F800000;
+   unsigned FRACTION_MASK = 0x007FFFFF;
+   unsigned exponent_part = uf & EXPONENT_MASK;
+   unsigned fraction_part = uf & FRACTION_MASK;
    // Check if expoenent part is [1111 1111] and fraction part is NOT ZERO
-   if (exponent_part == exponent_mask && fraction_part)
+   if (exponent_part == EXPONENT_MASK && fraction_part)
    {
       return uf;
    }
    // Reverse MSB
-   return uf & ~sign_mask;
+   return uf & ~SIGN_MASK;
 }
 /*
  * float_twice - Return bit-level equivalent of expression 2*f for
@@ -237,24 +237,22 @@ unsigned float_abs(unsigned uf)
  */
 unsigned float_twice(unsigned uf)
 {
-   unsigned sign_mask = 0x80000000;
-   unsigned exponent_mask = 0x7F800000;
-   unsigned fraction_mask = 0x007FFFFF;
-   unsigned sign_part = uf & sign_mask;
-   unsigned exponent_part = uf & exponent_mask;
-   unsigned fraction_part = uf & fraction_mask;
+   unsigned SIGN_MASK = 0x80000000;
+   unsigned EXPONENT_MASK = 0x7F800000;
+   unsigned FRACTION_MASK = 0x007FFFFF;
+   unsigned sign_part = uf & SIGN_MASK;
+   unsigned exponent_part = uf & EXPONENT_MASK;
+   unsigned fraction_part = uf & FRACTION_MASK;
    // Check for NaN or infinity
-   if (exponent_part == exponent_mask)
+   if (exponent_part == EXPONENT_MASK)
    {
       return uf;
    }
-
    // Denormalized number or zero
    if (exponent_part == 0)
    {
       return (sign_part | (fraction_part << 1));
    }
-
    // Normalized number
    exponent_part += 0x00800000; // Adding 1 to exponent part is equal to double the value  
    return (sign_part | exponent_part | fraction_part);
@@ -270,8 +268,8 @@ unsigned float_twice(unsigned uf)
  */
 unsigned float_i2f(int x)
 {
-   unsigned sign_mask = 0x80000000;
-   unsigned sign_part = x & sign_mask;
+   unsigned SIGN_MASK = 0x80000000;
+   unsigned sign_part = x & SIGN_MASK;
    unsigned ux, exponent_part, fraction_part, round_bits;
    // When x is 0
    if (x == 0)
@@ -305,7 +303,6 @@ unsigned float_i2f(int x)
    }
    // Return bit-level equivalent of expression (float) x
    return sign_part | (exponent_part << 23) | fraction_part;
-
 }
 /*
  * float_f2i - Return bit-level equivalent of expression (int) f
@@ -321,5 +318,48 @@ unsigned float_i2f(int x)
  */
 int float_f2i(unsigned uf)
 {
-   return 2;
+   unsigned SIGN_MASK = 0x80000000;
+   unsigned EXPONENT_MASK = 0x7F800000;
+   unsigned FRACTION_MASK = 0x007FFFFF;
+   unsigned sign_part = uf & SIGN_MASK;
+   unsigned exponent_part = uf & EXPONENT_MASK;
+   unsigned fraction_part = uf & FRACTION_MASK;
+   unsigned NaN_OR_INF = 0x80000000u;
+   unsigned BIAS = 127; // 2^7 - 1
+   int result;
+   // Check for NaN or infinity
+   if (exponent_part == EXPONENT_MASK)
+   {
+      return NaN_OR_INF;
+   }
+   // Check zero
+   if(exponent_part == 0) {
+      return 0;
+   }
+   // Now, consider IEEE Floating Point Standard M*2^E
+   exponent_part >>= 23;
+   // When exponent part - BIAS < 0, int value is always zero
+   if(exponent_part < BIAS) {
+      return 0;
+   }
+   exponent_part -= BIAS;
+   // When exponent part is more than 30, out of int range
+   if(exponent_part > 30) {
+      return NaN_OR_INF;
+   }
+   // Normalize the fraction by adding the hidden bit
+   fraction_part = fraction_part | 0x00800000u;
+   // Adjust fraction_part to integer
+   // Compare with length of fraction part to determine which way to shift
+   if(exponent_part < 23) {
+      // When exponent is less than 23, make M*2^E by shifting fraction part right
+      fraction_part >>= 23-exponent_part;
+   }
+   else {
+      // When exponent is more than 23, make M*2^E by shifting fraction part left
+      fraction_part <<= exponent_part-23;
+   }
+   // Finally IEEE Floating Point Standard (-1)^s * M * 2^E made by considering sign part
+   result = sign_part ? -fraction_part : fraction_part;
+   return result;
 }
