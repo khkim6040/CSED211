@@ -239,6 +239,7 @@ unsigned float_twice(unsigned uf) {
    unsigned sign_part = uf & SIGN_MASK;
    unsigned exponent_part = uf & EXPONENT_MASK;
    unsigned fraction_part = uf & FRACTION_MASK;
+   unsigned NaN_VALUE = 0x7FC00000;
    // Check for NaN or infinity
    if (exponent_part == EXPONENT_MASK) {
       return uf;
@@ -251,6 +252,9 @@ unsigned float_twice(unsigned uf) {
    // Adding 1 to exponent part is equal to double the value
    // Because it follows IEEE Floating Point Standard
    exponent_part += 0x00800000;
+   if (exponent_part == EXPONENT_MASK && fraction_part) {
+      return NaN_VALUE;
+   }
    return (sign_part | exponent_part | fraction_part);
 }
 /*
@@ -282,7 +286,7 @@ unsigned float_i2f(int x) {
       ux <<= 1;
    }
    // Derive fraction part, 23bits except MSB of 24bits
-   fraction_part = (ux & 0x7FFFFF00) >> 8;  // Note that we use ux which has been already shifted to 1.xxx form
+   fraction_part = (ux & 0x7FFFFF00) >> 8;  // Note that use ux which has been already shifted to 1.xxx form
    // Keep last 8bits(1byte) for rounding case
    round_bits = ux & 0xFF;
    // Round to even
