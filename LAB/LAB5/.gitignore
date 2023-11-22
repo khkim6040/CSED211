@@ -1,0 +1,8 @@
+khkim6040-handin.tar
+.vscode
+.csim_results
+.editorconfig
+csim
+test-trans
+tracegen
+trans.o
