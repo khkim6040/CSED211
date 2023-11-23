@@ -1,4 +1,5 @@
 /* 20190650 Gwanho Kim */
+
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
