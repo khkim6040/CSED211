@@ -3,6 +3,10 @@ khkim6040-handin.tar
 .csim_results
 .editorconfig
 csim
-test-trans
 tracegen
 trans.o
+.marker
+20190650.tar
+trace.f0
+trace.f1
+trace.tmp
