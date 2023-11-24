@@ -10,3 +10,4 @@ trans.o
 trace.f0
 trace.f1
 trace.tmp
+writeup_cachelab.pdf:Zone.Identifier
