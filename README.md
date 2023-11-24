@@ -7,6 +7,18 @@ This course provides a programmer's view of how computer systems execute program
 Name: Jisung Park  
 Homepage: http://jisungpark.kr
 
+## LAB Schedule
+There are 7 lab assignments.
+1. Data Lab-1
+2. Data Lab-2
+3. Bomb Lab
+4. Attack Lab
+5. Cache Lab
+6. Shell Lab
+7. Malloc Lab
+
+![Alt text](image.png)
+
 ## Reference
 "Computer Systems: A Programmer's Perspective" (3rd edition) by Randal Bryant and David O'Hallaron.
 
