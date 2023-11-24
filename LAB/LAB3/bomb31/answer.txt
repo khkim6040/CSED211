@@ -1,0 +1,7 @@
+And they have no disregard for human life.
+1 2 4 8 16 32
+4 0 
+24 2 DrEvil
+5 115 
+5 3 2 1 4 6
+7
