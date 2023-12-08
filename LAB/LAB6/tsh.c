@@ -166,27 +166,37 @@ void eval(char *cmdline) {
     int is_background;
     pid_t pid; // process if of child process
     is_background = parseline(cmdline, argv);
+    sigset_t mask_all, mask_one, prev_one;
+
+    sigfillset(&mask_all);
+    sigemptyset(&mask_one);
+    sigaddset(&mask_one, SIGCHLD);
+
     // if argv[0] is builtin command, execute it
     if (!builtin_cmd(argv)) {
         // printf("argv[0] : %s\n", argv[0]);
         // else, command is about executing program
+        // sigprocmask(SIG_BLOCK, &mask_one, &prev_one);
         if ((pid = fork()) == 0) {
+            // sigprocmask(SIG_SETMASK, &prev_one, NULL);
+            // setpgid(0, 0);
             // execute program in child process
             if (execve(argv[0], argv, environ) < 0) {
                 printf("COMMEND not found\n\n");
                 exit(0);
             }
         }
-    }
-
-    addjob(jobs, pid, (is_background ? BG : FG), cmdline); // Only add child process(pid != 0)
-    if (!is_background) {
-        // if foreground job, wait until child process is terminated
-        // waitfg(pid);          // foreground job이면 wait
-        waitpid(pid, NULL, 0);
-        deletejob(jobs, pid);
-    } else {
-        printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+        // sigprocmask(SIG_BLOCK, &mask_all, NULL);
+        addjob(jobs, pid, (is_background ? BG : FG), cmdline); // Only add child process(pid != 0)
+        // sigprocmask(SIG_SETMASK, &prev_one, NULL);
+        if (!is_background) {
+            // if foreground job, wait until child process is terminated
+            waitfg(pid); // foreground job이면 wait
+            // waitpid(pid, NULL, 0); // foreground job이면 wait
+            // deletejob(jobs, pid);  // delete job from job list
+        } else {
+            printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+        }
     }
 
     return;
@@ -277,8 +287,8 @@ void do_bgfg(char **argv) { return; }
  * waitfg - Block until process pid is no longer the foreground process
  */
 void waitfg(pid_t pid) {
-    while (pid == fgpid(jobs)) {
-        sleep(1);
+    while (fgpid(jobs)) {
+        usleep(1000);
     }
     return;
 }
@@ -294,7 +304,22 @@ void waitfg(pid_t pid) {
  *     available zombie children, but doesn't wait for any other
  *     currently running children to terminate.
  */
-void sigchld_handler(int sig) { return; }
+void sigchld_handler(int sig) {
+    int status;
+    pid_t pid;
+    while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
+        if (WIFEXITED(status)) {
+            // printf("Job [%d] (%d) terminated normally\n", pid2jid(pid), pid);
+            deletejob(jobs, pid);
+        } else if (WIFSIGNALED(status)) {
+            printf("Job [%d] (%d) terminated by signal %d\n", pid2jid(pid), pid, WTERMSIG(status));
+            deletejob(jobs, pid);
+        } else if (WIFSTOPPED(status)) {
+            printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, WSTOPSIG(status));
+            getjobpid(jobs, pid)->state = ST;
+        }
+    }
+}
 
 /*
  * sigint_handler - The kernel sends a SIGINT to the shell whenver the
@@ -316,7 +341,15 @@ void sigint_handler(int sig) {
  *     the user types ctrl-z at the keyboard. Catch it and suspend the
  *     foreground job by sending it a SIGTSTP.
  */
-void sigtstp_handler(int sig) { return; }
+void sigtstp_handler(int sig) {
+    pid_t pid = fgpid(jobs);
+    if (pid != 0) {
+        printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, sig);
+        getjobpid(jobs, pid)->state = ST;
+        kill(-pid, sig);
+    }
+    return;
+}
 
 /*********************
  * End signal handlers
