@@ -162,30 +162,31 @@ int main(int argc, char **argv) {
  * when we type ctrl-c (ctrl-z) at the keyboard.
  */
 void eval(char *cmdline) {
-    char *argv[MAXARGS]; // command 저장
+    char *argv[MAXARGS]; // save parsed command
     int is_background;
-    pid_t pid; // fork로 생성된 자식 프로세스의 pid
+    pid_t pid; // process if of child process
     is_background = parseline(cmdline, argv);
-    // parsing된 명령어를 전달
-    builtin_cmd(argv);
-
-    // printf("argv[0] : %s\n", argv[0]);
-    if ((pid = fork()) == 0) {
-        // fork로 자식 프로세스 생성 후 자식 프로세스에서 execve 실행
-        if (execve(argv[0], argv, environ) < 0) {
-            printf("COMMEND not found\n\n");
-            exit(0); // command not found이면 자식 프로세스 종료
+    // if argv[0] is builtin command, execute it
+    if (!builtin_cmd(argv)) {
+        // printf("argv[0] : %s\n", argv[0]);
+        // else, command is about executing program
+        if ((pid = fork()) == 0) {
+            // execute program in child process
+            if (execve(argv[0], argv, environ) < 0) {
+                printf("COMMEND not found\n\n");
+                exit(0);
+            }
         }
     }
 
-    addjob(jobs, pid, (is_background ? BG : FG), cmdline); // job 추가
+    addjob(jobs, pid, (is_background ? BG : FG), cmdline); // Only add child process(pid != 0)
     if (!is_background) {
+        // if foreground job, wait until child process is terminated
         // waitfg(pid);          // foreground job이면 wait
-        waitpid(pid, NULL,
-                0); // 자식 프로세스가 종료될 때까지 부모 프로세스가 wait
-        deletejob(jobs, pid); // job 삭제
+        waitpid(pid, NULL, 0);
+        deletejob(jobs, pid);
     } else {
-        listjobs(jobs); // job list 출력
+        printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
     }
 
     return;
@@ -359,8 +360,7 @@ int addjob(struct job_t *jobs, pid_t pid, int state, char *cmdline) {
                 nextjid = 1;
             strcpy(jobs[i].cmdline, cmdline);
             if (verbose) {
-                printf("Added job [%d] %d %s\n", jobs[i].jid, jobs[i].pid,
-                       jobs[i].cmdline);
+                printf("Added job [%d] %d %s\n", jobs[i].jid, jobs[i].pid, jobs[i].cmdline);
             }
             return 1;
         }
@@ -451,8 +451,7 @@ void listjobs(struct job_t *jobs) {
                 printf("Stopped ");
                 break;
             default:
-                printf("listjobs: Internal error: job[%d].state=%d ", i,
-                       jobs[i].state);
+                printf("listjobs: Internal error: job[%d].state=%d ", i, jobs[i].state);
             }
             printf("%s", jobs[i].cmdline);
         }
