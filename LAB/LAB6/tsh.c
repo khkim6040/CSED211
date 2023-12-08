@@ -301,7 +301,15 @@ void sigchld_handler(int sig) { return; }
  *    user types ctrl-c at the keyboard.  Catch it and send it along
  *    to the foreground job.
  */
-void sigint_handler(int sig) { return; }
+void sigint_handler(int sig) {
+    pid_t pid = fgpid(jobs);
+    if (pid != 0) {
+        printf("Job [%d] (%d) terminated by signal %d\n", pid2jid(pid), pid, sig);
+        deletejob(jobs, pid);
+        kill(-pid, sig);
+    }
+    return;
+}
 
 /*
  * sigtstp_handler - The kernel sends a SIGTSTP to the shell whenever
