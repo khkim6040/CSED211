@@ -166,6 +166,8 @@ void eval(char *cmdline) {
     int is_background;
     pid_t pid; // process if of child process
     is_background = parseline(cmdline, argv);
+    if (argv[0] == NULL)
+        return; // ignore empty command
     sigset_t mask_all, mask_one, prev_one;
 
     sigfillset(&mask_all);
@@ -176,19 +178,19 @@ void eval(char *cmdline) {
     if (!builtin_cmd(argv)) {
         // printf("argv[0] : %s\n", argv[0]);
         // else, command is about executing program
-        // sigprocmask(SIG_BLOCK, &mask_one, &prev_one);
+        sigprocmask(SIG_BLOCK, &mask_one, &prev_one);
         if ((pid = fork()) == 0) {
-            // sigprocmask(SIG_SETMASK, &prev_one, NULL);
-            // setpgid(0, 0);
+            sigprocmask(SIG_SETMASK, &prev_one, NULL);
+            setpgid(0, 0);
             // execute program in child process
             if (execve(argv[0], argv, environ) < 0) {
-                printf("COMMEND not found\n\n");
+                printf("%s: Command not found\n", argv[0]);
                 exit(0);
             }
         }
-        // sigprocmask(SIG_BLOCK, &mask_all, NULL);
+        sigprocmask(SIG_BLOCK, &mask_all, NULL);
         addjob(jobs, pid, (is_background ? BG : FG), cmdline); // Only add child process(pid != 0)
-        // sigprocmask(SIG_SETMASK, &prev_one, NULL);
+        sigprocmask(SIG_SETMASK, &prev_one, NULL);
         if (!is_background) {
             // if foreground job, wait until child process is terminated
             waitfg(pid); // foreground job이면 wait
@@ -281,7 +283,43 @@ int builtin_cmd(char **argv) {
 /*
  * do_bgfg - Execute the builtin bg and fg commands
  */
-void do_bgfg(char **argv) { return; }
+void do_bgfg(char **argv) {
+    // printf("do_bgfg\n");
+    struct job_t *job;
+    int jid;
+    pid_t pid;
+    int is_background = !strcmp(argv[0], "bg");
+    if (argv[1] == NULL) {
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
+    }
+    if (argv[1][0] == '%') {
+        jid = atoi(&argv[1][1]);
+        if (!(job = getjobjid(jobs, jid))) {
+            printf("%s: No such job\n", argv[1]);
+            return;
+        }
+    } else if (isdigit(argv[1][0])) {
+        pid = atoi(argv[1]);
+        if (!(job = getjobpid(jobs, pid))) {
+            printf("(%s): No such process\n", argv[1]);
+            return;
+        }
+    } else {
+        printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+        return;
+    }
+    if (is_background) {
+        job->state = BG;
+        kill(-job->pid, SIGCONT);
+        printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+    } else {
+        job->state = FG;
+        kill(-job->pid, SIGCONT);
+        waitfg(job->pid);
+    }
+    return;
+}
 
 /*
  * waitfg - Block until process pid is no longer the foreground process
@@ -308,6 +346,7 @@ void sigchld_handler(int sig) {
     int status;
     pid_t pid;
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
+        // printf("job is %d %d\n", pid2jid(pid), pid);
         if (WIFEXITED(status)) {
             // printf("Job [%d] (%d) terminated normally\n", pid2jid(pid), pid);
             deletejob(jobs, pid);
