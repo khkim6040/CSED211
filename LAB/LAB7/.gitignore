@@ -1,0 +1,9 @@
+mdriver.o
+memlib.o
+mm.o
+fsecs.o
+fcyc.o 
+ftimer.o 
+clock.o 
+malloclab-handout.tar
+writeup_malloclab.pdf
